@@ -61,18 +61,18 @@ pub fn smithay_runner(mut app: App) -> AppExit {
 
         active_touches: Default::default(),
     };
-    let mut create_window = SystemState::<CreateWindowParams<Added<Window>>>::from_world(
-        smithay_runner_state.world_mut(),
-    );
-    create_windows(
-        &globals,
-        &qh,
-        conn.clone(),
-        create_window.get_mut(smithay_runner_state.world_mut()),
-    );
-    create_window.apply(smithay_runner_state.world_mut());
 
     loop {
+        let mut create_window = SystemState::<CreateWindowParams<Added<Window>>>::from_world(
+            smithay_runner_state.world_mut(),
+        );
+        create_windows(
+            &globals,
+            &qh,
+            conn.clone(),
+            create_window.get_mut(smithay_runner_state.world_mut()),
+        );
+        create_window.apply(smithay_runner_state.world_mut());
         event_loop
             .dispatch(
                 Duration::from_secs_f32(1.0 / 60.0),

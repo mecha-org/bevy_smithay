@@ -67,17 +67,23 @@ impl Default for LayerShellSettings {
 }
 
 pub struct LayerShellWindow {
-    window: LayerSurface,
+    window: Option<LayerSurface>,
     conn: Connection,
 }
 
 impl LayerShellWindow {
     pub fn layer_surface(&self) -> &LayerSurface {
-        &self.window
+        self.window
+            .as_ref()
+            .expect("trying to access layer surface after destroying")
     }
 
+    pub fn destroy(&mut self) {}
+
     pub fn layer_surface_mut(&mut self) -> &mut LayerSurface {
-        &mut self.window
+        self.window
+            .as_mut()
+            .expect("trying to access layer surface after destroying")
     }
 }
 
@@ -86,7 +92,15 @@ impl HasWindowHandle for LayerShellWindow {
         &self,
     ) -> Result<raw_window_handle::WindowHandle<'_>, raw_window_handle::HandleError> {
         let raw_window_handle = RawWindowHandle::Wayland(WaylandWindowHandle::new(
-            core::ptr::NonNull::new(self.window.wl_surface().id().as_ptr() as *mut _).unwrap(),
+            core::ptr::NonNull::new(
+                self.window
+                    .as_ref()
+                    .expect("window handles doesn't exist because surface was destroyed")
+                    .wl_surface()
+                    .id()
+                    .as_ptr() as *mut _,
+            )
+            .unwrap(),
         ));
         unsafe { Ok(WindowHandle::borrow_raw(raw_window_handle)) }
     }
@@ -102,6 +116,18 @@ impl HasDisplayHandle for LayerShellWindow {
         unsafe { Ok(DisplayHandle::borrow_raw(raw_display_handle)) }
     }
 }
+
+// TODO: Destroy surfaces when the window is despawned.
+// impl Drop for LayerShellWindow {
+//     fn drop(&mut self) {
+//         self.window
+//             .as_ref()
+//             .expect("destrying layer_surface twice")
+//             .wl_surface()
+//             .destroy();
+//         drop(self.window.take());
+//     }
+// }
 
 pub fn create_window<State>(
     globals: &GlobalList,
@@ -133,7 +159,7 @@ where
     layer.commit();
 
     LayerShellWindow {
-        window: layer,
+        window: Some(layer),
         conn,
     }
 }

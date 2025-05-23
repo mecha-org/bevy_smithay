@@ -24,7 +24,7 @@ impl Plugin for SmithayPlugin {
 
     fn build(&self, app: &mut App) {
         app.init_non_send_resource::<SmithayWindows>()
-            .add_systems(Last, system::changed_windows);
+            .add_systems(Last, (system::changed_windows, system::despawn_windows));
         app.set_runner(state::smithay_runner);
     }
 }
