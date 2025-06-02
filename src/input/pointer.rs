@@ -25,7 +25,6 @@ fn convert_to_mouse_button(button: u32) -> MouseButton {
 }
 
 impl PointerHandler for SmithayRunnerState {
-    /// Handles pointer frame events from Smithay.
     fn pointer_frame(
         &mut self,
         _: &smithay_client_toolkit::reexports::client::Connection,
@@ -36,10 +35,14 @@ impl PointerHandler for SmithayRunnerState {
         for event in events {
             let smithay_windows = self.world().non_send_resource::<SmithayWindows>();
             let window_id = event.surface.id();
-            let entity = *smithay_windows
-                .smithay_to_entity
-                .get(&window_id)
-                .expect("no window created for the keyboard surface!");
+            let entity = smithay_windows.smithay_to_entity.get(&window_id);
+
+            // TODO: Destroy surface when window is despawned.
+            if entity.is_none() {
+                continue;
+            }
+            let entity = *entity.unwrap();
+
             let window = self.world().get::<Window>(entity).unwrap().clone();
             let mut position = bevy::math::Vec2 {
                 x: event.position.0 as f32,

@@ -396,12 +396,15 @@ impl KeyboardHandler for SmithayRunnerState {
     ) {
         if let Some(active_surface) = &self.active_keyboard_surface {
             let smithay_windows = self.world().non_send_resource::<SmithayWindows>();
-            let entity = smithay_windows
-                .smithay_to_entity
-                .get(&active_surface.id())
-                .expect("no window created for the keyboard surface!");
+            let entity = smithay_windows.smithay_to_entity.get(&active_surface.id());
 
-            let bevy_event = convert_keyboard_event(event, *entity, ButtonState::Pressed);
+            // TODO: Destroy surface when window is despawned.
+            if entity.is_none() {
+                return;
+            }
+            let entity = *entity.unwrap();
+
+            let bevy_event = convert_keyboard_event(event, entity, ButtonState::Pressed);
             self.bevy_window_events.send(bevy_event);
         } else {
             warn!("there is no active window to send keyboard events!");
@@ -419,12 +422,15 @@ impl KeyboardHandler for SmithayRunnerState {
     ) {
         if let Some(active_surface) = &self.active_keyboard_surface {
             let smithay_windows = self.world().non_send_resource::<SmithayWindows>();
-            let entity = smithay_windows
-                .smithay_to_entity
-                .get(&active_surface.id())
-                .expect("no window created for the keyboard surface!");
+            let entity = smithay_windows.smithay_to_entity.get(&active_surface.id());
 
-            let bevy_event = convert_keyboard_event(event, *entity, ButtonState::Released);
+            // TODO: Destroy surface when window is despawned.
+            if entity.is_none() {
+                return;
+            }
+            let entity = *entity.unwrap();
+
+            let bevy_event = convert_keyboard_event(event, entity, ButtonState::Released);
             self.bevy_window_events.send(bevy_event);
         } else {
             panic!("There is no window available to send keyboard events!");

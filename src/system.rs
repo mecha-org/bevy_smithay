@@ -1,7 +1,12 @@
+use std::ops::DerefMut;
+
 use bevy::{
     ecs::{query::QueryFilter, system::SystemParamItem},
     prelude::*,
-    window::{PrimaryWindow, RawHandleWrapper, WindowCreated},
+    window::{
+        ClosingWindow, PrimaryWindow, RawHandleWrapper, WindowClosed, WindowClosing, WindowCreated,
+        WindowWrapper,
+    },
 };
 use smithay_client_toolkit::{
     reexports::client::{Connection, QueueHandle, globals::GlobalList},
@@ -9,7 +14,9 @@ use smithay_client_toolkit::{
 };
 
 use crate::{
-    CreateWindowParams, shells::layer_shell::LayerShellSettings, smithay_windows::SmithayWindows,
+    CreateWindowParams,
+    shells::layer_shell::LayerShellSettings,
+    smithay_windows::{SmithayWindow, SmithayWindows},
     state::SmithayRunnerState,
 };
 pub(crate) fn create_windows<F: QueryFilter + 'static>(
@@ -26,6 +33,9 @@ pub(crate) fn create_windows<F: QueryFilter + 'static>(
 ) {
     let mut smithay_window;
     for (entity, window, handle_holder) in &mut created_windows {
+        if smithay_windows.entity_to_smithay.contains_key(&entity) {
+            continue;
+        }
         let window_settings = if let Some(window_settings) = window_settings.as_mut() {
             window_settings.size = (window.physical_width(), window.physical_height());
             window_settings
@@ -35,8 +45,9 @@ pub(crate) fn create_windows<F: QueryFilter + 'static>(
                 ..Default::default()
             }
         };
-
-        commands.entity(entity).insert_if_new(PrimaryWindow);
+        if smithay_windows.windows.is_empty() {
+            commands.entity(entity).insert_if_new(PrimaryWindow);
+        }
         smithay_window =
             smithay_windows.create_window(entity, window_settings, globals, qh, conn.clone());
 
@@ -52,7 +63,7 @@ pub(crate) fn create_windows<F: QueryFilter + 'static>(
             .insert(wrapper.unwrap())
             .insert(window_settings.clone());
 
-        info!("Window created!");
+        info!("Window created! {}", entity);
         window_created_events.send(WindowCreated { window: entity });
     }
 }
@@ -82,5 +93,43 @@ pub(crate) fn changed_windows(
             layer_shell_settings.margin.3,
         );
         surface.commit();
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn despawn_windows(
+    closing: Query<Entity, With<ClosingWindow>>,
+    mut closed: RemovedComponents<Window>,
+    window_entities: Query<Entity, With<Window>>,
+    mut closing_events: EventWriter<WindowClosing>,
+    mut closed_events: EventWriter<WindowClosed>,
+    mut windows_to_drop: Local<Vec<WindowWrapper<SmithayWindow>>>,
+    mut exit_events: EventReader<AppExit>,
+    mut smithay_windows: NonSendMut<SmithayWindows>,
+) {
+    for window in windows_to_drop.drain(..) {
+        drop(window);
+    }
+    for window in closing.iter() {
+        closing_events.send(WindowClosing { window });
+    }
+    for window in closed.read() {
+        info!("Closing window {}", window);
+        if !window_entities.contains(window) {
+            if let Some(smithay_window) = smithay_windows.entity_to_smithay.remove(&window) {
+                smithay_windows.smithay_to_entity.remove(&smithay_window);
+                if let Some(window) = smithay_windows.windows.remove(&smithay_window) {
+                    windows_to_drop.push(window);
+                }
+            }
+        }
+        closed_events.send(WindowClosed { window });
+    }
+
+    if !exit_events.is_empty() {
+        exit_events.clear();
+        for window in window_entities.iter() {
+            closing_events.send(WindowClosing { window });
+        }
     }
 }
