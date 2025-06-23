@@ -22,6 +22,7 @@ fn convert_keyboard_event(
         key_code: convert_to_key_code(event.keysym),
         logical_key: convert_to_logical_key(event.keysym),
         repeat: false,
+        text: None,
     }
 }
 

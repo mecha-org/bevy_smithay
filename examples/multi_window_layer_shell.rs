@@ -76,17 +76,13 @@ fn setup_new_window(
                 "New UI window created (ID: {:?}), setting up its camera and UI.",
                 event.window
             );
-
-            commands.spawn((Camera2dBundle {
-                camera: Camera {
+            commands.spawn((Camera2d::default(), Camera {
                     target: bevy::render::camera::RenderTarget::Window(
                         bevy::window::WindowRef::Entity(event.window),
                     ),
                     clear_color: ClearColorConfig::Custom(Color::default()),
                     ..default()
-                },
-                ..default()
-            },));
+                }));
             new_window_info.is_setup_pending = false; // Mark as setup complete
         }
     }
