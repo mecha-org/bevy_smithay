@@ -10,6 +10,7 @@ license = "MIT"
 [dependencies]
 bevy = { version = "0.16.0-dev", default-features = false, features = [
     "bevy_window",
+    "bevy_log"
 ] }
 cfg-if = "1.0.0"
 raw-window-handle = "0.6.2"
