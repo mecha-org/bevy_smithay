@@ -6,6 +6,7 @@ use shells::layer_shell::LayerShellSettings;
 use smithay_windows::SmithayWindows;
 
 mod input;
+pub mod screenshot;
 mod shells;
 mod smithay_windows;
 mod state;

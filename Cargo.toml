@@ -16,6 +16,9 @@ cfg-if = "1.0.0"
 raw-window-handle = "0.6.2"
 smithay-client-toolkit = "0.19.2"
 wayland-backend = { version = "0.3.8", features = ["client_system"] }
+tokio = { version = "1.0", features = ["full"] }
+image = { version = "0.25", features = ["png"] }
+wayland-protocols-async = {git="https://github.com/mecha-org/wayland-protocols-async.git", rev = "0c2c8f6ab9d944e24fdff89f08fd8fe6a67eb6d3"}
 
 [dev-dependencies]
 bevy = { version = "0.16.0-dev", default-features = true } 
