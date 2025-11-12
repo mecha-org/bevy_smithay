@@ -53,5 +53,5 @@ pub type CreateWindowParams<'w, 's, F = ()> = (
     >,
     NonSendMut<'w, SmithayWindows>,
     Option<ResMut<'w, LayerShellSettings>>,
-    EventWriter<'w, WindowCreated>,
+    MessageWriter<'w, WindowCreated>,
 );
