@@ -1,5 +1,3 @@
-use std::ops::DerefMut;
-
 use bevy::{
     ecs::{query::QueryFilter, system::SystemParamItem},
     prelude::*,
@@ -64,7 +62,7 @@ pub(crate) fn create_windows<F: QueryFilter + 'static>(
             .insert(window_settings.clone());
 
         info!("Window created! {}", entity);
-        window_created_events.send(WindowCreated { window: entity });
+        window_created_events.write(WindowCreated { window: entity });
     }
 }
 
@@ -101,17 +99,17 @@ pub(crate) fn despawn_windows(
     closing: Query<Entity, With<ClosingWindow>>,
     mut closed: RemovedComponents<Window>,
     window_entities: Query<Entity, With<Window>>,
-    mut closing_events: EventWriter<WindowClosing>,
-    mut closed_events: EventWriter<WindowClosed>,
+    mut closing_events: MessageWriter<WindowClosing>,
+    mut closed_events: MessageWriter<WindowClosed>,
     mut windows_to_drop: Local<Vec<WindowWrapper<SmithayWindow>>>,
-    mut exit_events: EventReader<AppExit>,
+    mut exit_events: MessageReader<AppExit>,
     mut smithay_windows: NonSendMut<SmithayWindows>,
 ) {
     for window in windows_to_drop.drain(..) {
         drop(window);
     }
     for window in closing.iter() {
-        closing_events.send(WindowClosing { window });
+        closing_events.write(WindowClosing { window });
     }
     for window in closed.read() {
         info!("Closing window {}", window);
@@ -123,13 +121,13 @@ pub(crate) fn despawn_windows(
                 }
             }
         }
-        closed_events.send(WindowClosed { window });
+        closed_events.write(WindowClosed { window });
     }
 
     if !exit_events.is_empty() {
         exit_events.clear();
         for window in window_entities.iter() {
-            closing_events.send(WindowClosing { window });
+            closing_events.write(WindowClosing { window });
         }
     }
 }

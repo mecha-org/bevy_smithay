@@ -8,7 +8,7 @@ repository = "https://github.com/mecha-org/bevy_smithay"
 license = "MIT"
 
 [dependencies]
-bevy = { version = "0.16.0-dev", default-features = false, features = [
+bevy = { version = "0.17.0", default-features = false, features = [
     "bevy_window",
     "bevy_log"
 ] }
@@ -18,4 +18,4 @@ smithay-client-toolkit = "0.19.2"
 wayland-backend = { version = "0.3.8", features = ["client_system"] }
 
 [dev-dependencies]
-bevy = { version = "0.16.0-dev", default-features = true } 
+bevy = { version = "0.17", default-features = true } 

@@ -1,6 +1,11 @@
 #![allow(warnings)]
 
-use bevy::{color::palettes::basic::*, prelude::*, window::WindowCreated, winit::WinitPlugin};
+use bevy::{
+    color::palettes::basic::*,
+    prelude::*,
+    window::{WindowCreated, WindowResolution},
+    winit::WinitPlugin,
+};
 use bevy_smithay::{
     SmithayPlugin,
     prelude::{Anchor, Layer, LayerShellSettings},
@@ -51,7 +56,7 @@ fn spawn_new_window(
             let new_window_entity = commands
                 .spawn(Window {
                     title: "UI Only Window".to_string(),
-                    resolution: (400., 250.).into(),
+                    resolution: WindowResolution::new(400, 250),
                     ..default()
                 })
                 .id();
@@ -66,7 +71,7 @@ fn spawn_new_window(
 
 fn setup_new_window(
     mut commands: Commands,
-    mut window_created_events: EventReader<WindowCreated>,
+    mut window_created_events: MessageReader<WindowCreated>,
     mut new_window_info: ResMut<NewWindowInfo>,
     asset_server: Res<AssetServer>, // For fonts
 ) {
@@ -76,13 +81,16 @@ fn setup_new_window(
                 "New UI window created (ID: {:?}), setting up its camera and UI.",
                 event.window
             );
-            commands.spawn((Camera2d::default(), Camera {
-                    target: bevy::render::camera::RenderTarget::Window(
-                        bevy::window::WindowRef::Entity(event.window),
-                    ),
+            commands.spawn((
+                Camera2d::default(),
+                Camera {
+                    target: bevy::camera::RenderTarget::Window(bevy::window::WindowRef::Entity(
+                        event.window,
+                    )),
                     clear_color: ClearColorConfig::Custom(Color::default()),
                     ..default()
-                }));
+                },
+            ));
             new_window_info.is_setup_pending = false; // Mark as setup complete
         }
     }
@@ -112,17 +120,17 @@ fn button_system(
             Interaction::Pressed => {
                 **text = "Press".to_string();
                 *color = PRESSED_BUTTON.into();
-                border_color.0 = RED.into();
+                border_color.set_all(RED);
             }
             Interaction::Hovered => {
                 **text = "Hover".to_string();
                 *color = HOVERED_BUTTON.into();
-                border_color.0 = Color::WHITE;
+                border_color.set_all(Color::WHITE);
             }
             Interaction::None => {
                 **text = "Button".to_string();
                 *color = NORMAL_BUTTON.into();
-                border_color.0 = Color::BLACK;
+                border_color.set_all(Color::BLACK);
             }
         }
     }
@@ -153,7 +161,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                         align_items: AlignItems::Center,
                         ..default()
                     },
-                    BorderColor(Color::BLACK),
+                    BorderColor::all(Color::BLACK),
                     BorderRadius::MAX,
                     BackgroundColor(NORMAL_BUTTON),
                 ))
