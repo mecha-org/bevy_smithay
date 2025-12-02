@@ -29,9 +29,9 @@ const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
 const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
 
-fn exit_on_esc(keys: Res<ButtonInput<KeyCode>>) {
+fn exit_on_esc(keys: Res<ButtonInput<KeyCode>>, mut exit_writer: EventWriter<AppExit>) {
     if keys.just_pressed(KeyCode::Escape) {
-        std::process::exit(0);
+        exit_writer.write(AppExit::Success);
     }
 }
 
