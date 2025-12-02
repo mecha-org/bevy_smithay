@@ -96,9 +96,9 @@ fn setup_new_window(
     }
 }
 
-fn exit_on_esc(keys: Res<ButtonInput<KeyCode>>) {
+fn exit_on_esc(keys: Res<ButtonInput<KeyCode>>, mut exit_writer: EventWriter<AppExit>) {
     if keys.just_pressed(KeyCode::Escape) {
-        std::process::exit(0);
+        exit_writer.write(AppExit::Success);
     }
 }
 
