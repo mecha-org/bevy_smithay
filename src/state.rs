@@ -58,11 +58,17 @@ pub fn smithay_runner(mut app: App) -> AppExit {
 
         app,
         bevy_window_events: vec![],
+        app_exit: None,
 
         active_touches: Default::default(),
     };
 
     loop {
+        if let Some(app_exit) = smithay_runner_state.app.should_exit() {
+            smithay_runner_state.app_exit = Some(app_exit);
+            break;
+        }
+
         let mut create_window = SystemState::<CreateWindowParams<Added<Window>>>::from_world(
             smithay_runner_state.world_mut(),
         );
@@ -81,6 +87,11 @@ pub fn smithay_runner(mut app: App) -> AppExit {
             .expect("an unexpected error occured");
         smithay_runner_state.run_app_update();
     }
+
+    smithay_runner_state.app_exit.unwrap_or_else(|| {
+        error!("Failed to receive an app exit code! This is a bug");
+        AppExit::error()
+    })
 }
 
 pub struct SmithayRunnerState {
@@ -100,6 +111,7 @@ pub struct SmithayRunnerState {
     // Bevy
     app: App,
     pub(crate) bevy_window_events: Vec<BevyWindowEvent>,
+    app_exit: Option<AppExit>,
 
     // Touch
     pub(crate) active_touches: std::collections::HashMap<i32, (Entity, Vec2)>,
